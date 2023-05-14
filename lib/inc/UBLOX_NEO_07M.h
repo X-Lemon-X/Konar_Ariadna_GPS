@@ -1,0 +1,53 @@
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifndef _UBLOX_NEO_07M_H_
+#define _UBLOX_NEO_07M_H_
+
+//status values
+#define UBLOX_NEO_07M_STATUS_OK 0
+#define UBLOX_NEO_07M_STATUS_ERROR 1
+#define UBLOX_NEO_07M_STATUS_INVALID 2
+#define UBLOX_NEO_07M_DATA_STATUS_VALID 'A'
+#define UBLOX_NEO_07M_DATA_STATUS_INVALID 'V'
+
+
+//constants
+#define UBLOX_NEO_07M_BUFFER_KEY_SIZE 6
+#define UBLOX_NEO_07M_CONST_KNOTS_TO_METERS_PER_SECOND 0.514444f
+
+//macros 
+#define charToint(c) (c - '0') //only for numbers from 0-9
+#define newString(size) (char*)malloc(size*sizeof(char)) 
+
+// Most of RMC data - Recommended Minimum data
+// hour, minute, second, status, latitude, longitude, speed, date, month, year
+typedef struct
+{
+  // GPS position
+  uint8_t status; // A - valid, V - invalid
+  float latitude;
+  float longitude;
+  float altitude;
+
+  // GPS speed
+  float speed;
+
+  // GPS time
+  uint8_t hour;
+  uint8_t minute;
+  uint8_t second;
+
+  //GPS date
+  uint8_t date;
+  uint8_t month;
+  uint8_t year;
+} UBLOX_NEO_07M;
+
+uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data);
+uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M *data, char *buffer, size_t size );
+
+
+
+#endif
