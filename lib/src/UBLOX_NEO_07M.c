@@ -23,9 +23,6 @@ uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data)
   return UBLOX_NEO_07M_STATUS_OK;
 }
 
-//parse data from UBLOX_NEO_07M
-//return UBLOX_NEO_07M_STATUS_OK if OK
-// data for example "$GPRMC,205815.00,A,5103.74608,N,01658.83137,E,0.041,,130523,,,D*73"
 uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M *data, char *buffer, size_t size )
 {
   if( buffer == NULL || data == NULL || size == 0 ) return UBLOX_NEO_07M_STATUS_ERROR;
@@ -46,6 +43,12 @@ uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M *data, char *buffer, size_t size )
   return res;
 }
 
+
+/// @brief convert GPRMS data to UBLOX_NEO_07M struct
+/// @param data 
+/// @param buffer 
+/// @param size 
+/// @return 
 uint8_t UBLOX_NEO_07M_read_RMC(UBLOX_NEO_07M *data, char *buffer, size_t size )
 {
   if(data == NULL || buffer == NULL || size == 0) return UBLOX_NEO_07M_STATUS_ERROR;
@@ -84,7 +87,12 @@ uint8_t UBLOX_NEO_07M_read_RMC(UBLOX_NEO_07M *data, char *buffer, size_t size )
   return UBLOX_NEO_07M_STATUS_OK;
 }
 
-//add gaps between separators taht repeat one after onother np. ",," -> ", ,"
+/// @brief add gaps between separators taht repeat one after onother np. ",," -> ", ,"
+/// @param bufferOld buffer with data
+/// @param size size of buffer
+/// @param bufferNew new buffer with gaps between separators
+/// @param newSize size of new buffer
+/// @param separator separator
 uint8_t UBLOX_NEO_07M_addGapsBetweenSeparator(char *bufferOld,size_t size, char **bufferNew, size_t *newSize, char separator)
 {
   if( bufferOld == NULL || size == 0 || newSize == NULL ) return UBLOX_NEO_07M_STATUS_ERROR;

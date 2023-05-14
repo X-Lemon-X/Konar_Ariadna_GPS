@@ -45,7 +45,18 @@ typedef struct
   uint8_t year;
 } UBLOX_NEO_07M;
 
+/// @brief initiate UBLOX_NEO_07M structure 
+/// @param data - gps data out structure
+/// @return UBLOX_NEO_07M_STATUS_OK if ok
 uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data);
+
+
+/// @brief parse data from uart to UBLOX_NEO_07M structure
+/// data for example "$GPRMC,205815.00,A,5103.74608,N,01658.83137,E,0.041,,130523,,,D*73"
+/// @param data UBLOX_NEO_07M structure
+/// @param buffer uart data buffer
+/// @param size uart data buffer size
+/// @return UBLOX_NEO_07M_STATUS_OK if ok 
 uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M *data, char *buffer, size_t size );
 
 
