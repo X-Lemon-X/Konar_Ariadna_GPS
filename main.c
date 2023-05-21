@@ -11,10 +11,11 @@ int main(int argc, char *argv[])
   UBLOX_NEO_07M_Init(&data);
   
   char line[150];
-	FILE *file = fopen("C:/Users/patdu/Desktop/IT/Konar/GPS_Ariadna/testdata" , "r");
+	FILE *file = fopen("/home/lemonx/IT/Konar/Konar_Ariadna_GPS/testdata" , "r");
   while(fgets(line, sizeof(line), file) != NULL)
 	{
     uint8_t rs = UBLOX_NEO_07M_Parse(&data, line, strlen(line) + 1);
+
     printf("-------------------------------------------------------\n");
     printf("line: %s\n", line);
     if(rs == UBLOX_NEO_07M_STATUS_OK)
@@ -38,8 +39,6 @@ int main(int argc, char *argv[])
   }
 
   
-
-
   return 0;
 }
 
