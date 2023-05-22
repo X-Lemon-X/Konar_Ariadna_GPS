@@ -3,10 +3,11 @@
 #include "task.h"
 #include "queue.h"
 
+#include <string.h>
 #include "UBLOX_NEO_07M.h"
 
 TIM_HandleTypeDef htim11;
-UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
 
 static QueueHandle_t queue_gps_data;
 #define GPS_QUEUE_SIZE 10
@@ -38,17 +39,18 @@ void TIM1_TRG_COM_TIM11_IRQHandler() {
 	HAL_TIM_IRQHandler(&htim11);
 }
 
-HAL_StatusTypeDef MX_USART1_UART_Init(void)
+HAL_StatusTypeDef MX_USART2_UART_Init(void)
 {
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 9600;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  return HAL_UART_Init(&huart1);
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 9600;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode =  UART_MODE_TX;// UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_8;
+
+  return HAL_UART_Init(&huart2);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -89,11 +91,15 @@ void ReadGPS(void *param) {
   UBLOX_NEO_07M data;
   UBLOX_NEO_07M_Init(&data);
   uint8_t buffer[UBLOX_NEO_07M_BUFFER_SIZE];
+  uint8_t buffer2[6];
+  strcpy((char*)buffer2, "hello");
 
   while(1) {
     vTaskDelay(50);
+    HAL_StatusTypeDef stat = HAL_TIMEOUT,stat2=HAL_TIMEOUT;
     
-    HAL_StatusTypeDef stat = HAL_UART_Receive(&huart1, buffer, UBLOX_NEO_07M_BUFFER_SIZE,500);
+    stat = HAL_UART_Receive_IT(&huart2, buffer, UBLOX_NEO_07M_BUFFER_SIZE);
+    stat2 = HAL_UART_Transmit_IT(&huart2, buffer2, 6);
 
     if(stat != HAL_OK) continue;
     //if( HAL_UART_Receive(&huart1, buffer, UBLOX_NEO_07M_BUFFER_SIZE, 1000) != HAL_OK) continue;
@@ -144,8 +150,21 @@ int main() {
 
 	HAL_RCC_OscConfig(&oscillator);
 	HAL_RCC_ClockConfig(&clock, FLASH_LATENCY_2);
-  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
   InitGPS_QUEUE();
+
+  uint8_t buffer[UBLOX_NEO_07M_BUFFER_SIZE];
+  uint8_t buffer2[7];
+  strcpy((char*)buffer2, "hello");
+
+  while(1) {
+    HAL_Delay(50);
+    HAL_StatusTypeDef stat = HAL_TIMEOUT,stat2=HAL_TIMEOUT;
+    //stat = HAL_UART_Receive(&huart2, buffer, UBLOX_NEO_07M_BUFFER_SIZE,100);
+    stat2 = HAL_UART_Transmit(&huart2, buffer2, 6,100);
+
+    if(stat != HAL_OK) continue;
+  }
 
 	xTaskCreate(blink, "blink", 1024, NULL, 4, NULL);
   xTaskCreate(ReadGPS, "read gps", 2024, NULL, 4, NULL);
