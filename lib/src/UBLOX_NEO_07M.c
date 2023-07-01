@@ -23,6 +23,7 @@ uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data)
   return UBLOX_NEO_07M_STATUS_OK;
 }
 
+
 uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M *data, char *buffer, size_t size )
 {
   if( buffer == NULL || data == NULL || size == 0 ) return UBLOX_NEO_07M_STATUS_ERROR;
@@ -122,4 +123,18 @@ uint8_t UBLOX_NEO_07M_addGapsBetweenSeparator(char *bufferOld,size_t size, char 
   return UBLOX_NEO_07M_STATUS_OK;
 }
 
-// Path: 
+uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M_GPS *gps,UBLOX_NEO_07M *data, char sign)
+{
+  if( data == NULL || gps == NULL ) return UBLOX_NEO_07M_STATUS_ERROR;
+
+  gps->buffer[gps->index] = sign;
+  if(sign == '\n'){
+    uint8_t status = UBLOX_NEO_07M_Parse(data, gps->buffer, gps->index);
+    memcpy(gps->buffer, gps->buffer + gps->index , UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE - gps->index);
+    gps->index = UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE - gps->index;
+    return status;
+  }  
+  else gps->index++;
+  
+  return UBLOX_NEO_07M_STATUS_OK;
+}

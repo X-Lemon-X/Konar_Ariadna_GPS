@@ -14,6 +14,7 @@
 
 
 //constants
+#define UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE 150
 #define UBLOX_NEO_07M_BUFFER_KEY_SIZE 6
 #define UBLOX_NEO_07M_CONST_KNOTS_TO_METERS_PER_SECOND 0.514444f
 
@@ -44,6 +45,21 @@ typedef struct
   uint8_t month;
   uint8_t year;
 } UBLOX_NEO_07M;
+
+enum UBLOX_NEO_07M_GPS_STATUS
+{
+  SIGN_BEGIN = 0,
+  UBLOX_NEO_07M_GPS_STATUS_ERROR = 1,
+  UBLOX_NEO_07M_GPS_STATUS_INVALID = 2
+}; 
+
+typedef struct 
+{
+  char buffer[UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE ];
+  size_t index=0;
+} UBLOX_NEO_07M_GPS;
+
+
 
 /// @brief initiate UBLOX_NEO_07M structure 
 /// @param data - gps data out structure
