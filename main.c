@@ -8,13 +8,22 @@
 int main(int argc, char *argv[])
 {
   UBLOX_NEO_07M data;
+  UBLOX_NEO_07M_GPS gps;
   UBLOX_NEO_07M_Init(&data);
-  
+  UBLOX_NEO_07M_GPS_Init(&gps);
+  uint8_t rs = UBLOX_NEO_07M_STATUS_ERROR;
+
+
   char line[150];
-	FILE *file = fopen("/home/lemonx/IT/Konar/Konar_Ariadna_GPS/testdata" , "r");
+	FILE *file = fopen("testdata" , "r");
   while(fgets(line, sizeof(line), file) != NULL)
 	{
-    uint8_t rs = UBLOX_NEO_07M_Parse(&data, line, strlen(line) + 1);
+    for (int i = 0; i < strlen(line); i++)
+    {
+      rs = UBLOX_NEO_07M_Single_char_parse(&gps, &data, line[i]);
+    }
+
+    // uint8_t rs = UBLOX_NEO_07M_Parse(&data, line, strlen(line) + 1);
 
     printf("-------------------------------------------------------\n");
     printf("line: %s\n", line);

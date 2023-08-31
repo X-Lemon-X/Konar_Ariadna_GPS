@@ -23,6 +23,14 @@ uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data)
   return UBLOX_NEO_07M_STATUS_OK;
 }
 
+uint8_t UBLOX_NEO_07M_GPS_Init(UBLOX_NEO_07M_GPS *gps)
+{
+  if(gps == NULL) return UBLOX_NEO_07M_STATUS_ERROR;
+  memset(gps->buffer, 0, UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE);
+  gps->index = 0;
+  return UBLOX_NEO_07M_STATUS_OK;
+}
+
 
 uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M *data, char *buffer, size_t size )
 {
@@ -40,7 +48,7 @@ uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M *data, char *buffer, size_t size )
   if(!strcmp(keyvalue, "$GPRMC")) res = UBLOX_NEO_07M_read_RMC(data, bufferNew, newSize);
   else res = UBLOX_NEO_07M_STATUS_INVALID;
 
-  free(bufferNew);
+  MemporyFree(bufferNew);
   return res;
 }
 
@@ -98,7 +106,7 @@ uint8_t UBLOX_NEO_07M_addGapsBetweenSeparator(char *bufferOld,size_t size, char 
 {
   if( bufferOld == NULL || size == 0 || newSize == NULL ) return UBLOX_NEO_07M_STATUS_ERROR;
   //alloc tempo buffer
-  char *temp = newString(2*size);
+  char *temp = MemporyAlocaotor(char, 2*size);
   size_t countSeparators = 0;
   //add gaps between separators taht repeat one after onother np. ",," -> ", ,"
   for (size_t i = 0; i < size; i++){
@@ -113,28 +121,34 @@ uint8_t UBLOX_NEO_07M_addGapsBetweenSeparator(char *bufferOld,size_t size, char 
   //finsh string with '\0'
   temp[size+countSeparators] = '\0';
   //resize buffer for only necessary size
-  *bufferNew = (char *)realloc(temp, (size+countSeparators)*sizeof(char));
+  *bufferNew = MemporyReAlocaotor(temp,char, size+countSeparators);
+  // *bufferNew = (char *)realloc(temp, (size+countSeparators)*sizeof(char));
   *newSize = size+countSeparators;
   
   if(*bufferNew == NULL){
-    free(temp);
+    // free(temp);
+    MemporyFree(temp);
     return UBLOX_NEO_07M_STATUS_ERROR;
   }
   return UBLOX_NEO_07M_STATUS_OK;
 }
 
-uint8_t UBLOX_NEO_07M_Parse(UBLOX_NEO_07M_GPS *gps,UBLOX_NEO_07M *data, char sign)
+uint8_t UBLOX_NEO_07M_Single_char_parse(UBLOX_NEO_07M_GPS *gps,UBLOX_NEO_07M *data, char sign)
 {
   if( data == NULL || gps == NULL ) return UBLOX_NEO_07M_STATUS_ERROR;
 
   gps->buffer[gps->index] = sign;
   if(sign == '\n'){
     uint8_t status = UBLOX_NEO_07M_Parse(data, gps->buffer, gps->index);
-    memcpy(gps->buffer, gps->buffer + gps->index , UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE - gps->index);
-    gps->index = UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE - gps->index;
+    memset(gps->buffer, 0, UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE);
+    gps->index = 0;
     return status;
   }  
+  else if(gps->index >= UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE) {
+    memset(gps->buffer, 0, UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE);
+    gps->index = 0;
+  }
   else gps->index++;
   
-  return UBLOX_NEO_07M_STATUS_OK;
+  return UBLOX_NEO_07M_STATUS_WAIT;
 }
