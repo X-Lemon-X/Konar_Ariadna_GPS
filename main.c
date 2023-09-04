@@ -10,8 +10,12 @@ int main(int argc, char *argv[])
   UBLOX_NEO_07M data;
   UBLOX_NEO_07M_GPS gps;
   UBLOX_NEO_07M_Init(&data);
-  UBLOX_NEO_07M_GPS_Init(&gps);
+  UBLOX_NEO_07M_GPS_Init(&gps,UBLOX_NEO_07M_Interpreter_GPRMC);
   uint8_t rs = UBLOX_NEO_07M_STATUS_ERROR;
+/*
+$GPGLL,5103.74607,N,01658.83108,E,205812.00,A,D*6D
+$GPVTG,,T,,M,0.021,N,0.040,K,D*21
+*/
 
 
   char line[150];
@@ -20,7 +24,9 @@ int main(int argc, char *argv[])
 	{
     for (int i = 0; i < strlen(line); i++)
     {
-      rs = UBLOX_NEO_07M_Single_char_parse(&gps, &data, line[i]);
+      rs = UBLOX_NEO_07M_read(&gps, &data, line[i]);
+      printf("rs: %d, %c\n", rs, line[i]);
+      // rs = UBLOX_NEO_07M_Single_char_parse(&gps, &data, line[i]);
     }
 
     // uint8_t rs = UBLOX_NEO_07M_Parse(&data, line, strlen(line) + 1);
