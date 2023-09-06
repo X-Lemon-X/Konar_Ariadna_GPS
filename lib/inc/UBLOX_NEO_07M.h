@@ -16,7 +16,10 @@
 
 
 //constants
-#define UBLOX_NEO_07M_BUFFER_BUFFOR_SIZE 150
+
+#define UBLOX_NEO_07M_BUFFER_SIZE 200
+#define UBLOX_NEO_07M_HALF_BUFFOR_SIZE 100
+
 #define UBLOX_NEO_07M_CONST_KNOTS_TO_METERS_PER_SECOND 0.514444f
 #define UBLOX_NEO_07M_SMALL_BUFFOR_SIZE 20
 #define UBLOX_NEO_07M_True 1
@@ -26,9 +29,8 @@
 #define charToint(c) (c - '0') //only for numbers from 0-9
 
 
-
-// Most of RMC data - Recommended Minimum data
-// hour, minute, second, status, latitude, longitude, speed, date, month, year
+// gps data structure
+// hour, minute, second, status, latitude, longitude, velocity, date, month, year
 typedef struct
 {
   // GPS position
@@ -37,8 +39,8 @@ typedef struct
   float longitude;
   float altitude;
 
-  // GPS speed
-  float speed;
+  // GPS velocity
+  float velocity;
 
   // GPS time
   uint8_t hour;
@@ -52,8 +54,10 @@ typedef struct
 } UBLOX_NEO_07M;
 
 
+/// @brief function pointer to interpreter function for specific gps data
 typedef uint8_t (*UBLOX_NEO_07M_Interpreter)(UBLOX_NEO_07M *, char*, size_t, int);
 
+/// @brief structure for gps interpreter
 typedef struct 
 {
   char small_buffor[UBLOX_NEO_07M_SMALL_BUFFOR_SIZE];
@@ -65,9 +69,8 @@ typedef struct
 
 
 
-
 /// @brief initiate UBLOX_NEO_07M structure 
-/// @param data - gps data out structure
+/// @param data gps data out structure
 /// @return status UBLOX_NEO_07M_STATUS ...
 uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data);
 
@@ -77,17 +80,62 @@ uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data);
 uint8_t UBLOX_NEO_07M_GPS_Init(UBLOX_NEO_07M_GPS *gps, UBLOX_NEO_07M_Interpreter interpreter);
 
 /// @brief parse data from gps 
-/// @param data - gps data out structure
-/// @param buffer - buffer with data from gps
+/// @param data gps data out structure
+/// @param buffer buffer with data from gps
 /// @return status UBLOX_NEO_07M_STATUS_WAIT if data is not complete, UBLOX_NEO_07M_STATUS_OK if data is complete, UBLOX_NEO_07M_STATUS_ERROR if error occured
 uint8_t UBLOX_NEO_07M_read(UBLOX_NEO_07M_GPS *gps,UBLOX_NEO_07M *data, uint8_t byte);
 
-/// @brief interpteter for GPRMC data use only with UBLOX_NEO_07M_GPS_Init
-/// @param data - gps data out structure
-/// @param token - token from gps data
-/// @param size - size of token
-/// @param token_index - index of token
+/// @brief interpteter for GPRMC data use only as argument of UBLOX_NEO_07M_GPS_Init
+/// @param data gps data out structure
+/// @param token token from gps data
+/// @param size size of token
+/// @param token_index index of token
 uint8_t UBLOX_NEO_07M_Interpreter_GPRMC(UBLOX_NEO_07M *data, char *token, size_t size, int token_index);
+
+/*
+
+void UBLOX_NEO_07M_UART_HANDLER(size_t buff_begin,size_t buff_end)
+{
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+  void *halfBuffor = malloc(UBLOX_NEO_07M_HALF_BUFFOR_SIZE*sizeof(uint8_t));
+  if (halfBuffor == NULL) return;
+  memcpy(halfBuffor, UART6_rxBuffer+buff_begin, buff_end-buff_begin);
+
+  BaseType_t stat =xQueueCRSendFromISR(UART6_rxQueue, (void *)&halfBuffor, xHigherPriorityTaskWoken);
+  if(stat) free(halfBuffor);
+  if( xHigherPriorityTaskWoken ) portYIELD_FROM_ISR( xHigherPriorityTaskWoken ); // Actual macro used here is port specific.
+}
+
+*/
+
+/*
+
+void ReadGPS_DMA(void *param) {
+  (void)param;
+  uint8_t *buffer= NULL;
+  UBLOX_NEO_07M data;
+  UBLOX_NEO_07M_GPS gps;
+  UBLOX_NEO_07M_Init(&data);
+  UBLOX_NEO_07M_GPS_Init(&gps, UBLOX_NEO_07M_Interpreter_GPRMC);
+  UART6_rxQueue = xQueueCreate(10, sizeof(uint8_t*));
+  HAL_UART_Receive_DMA(&huart6,UART6_rxBuffer, UBLOX_NEO_07M_BUFFER_SIZE);
+
+  UBLOX_NEO_07M temp;
+  while (1){
+    BaseType_t stat = xQueueReceive(UART6_rxQueue, (void *)&buffer, 50);
+    if(stat != pdTRUE) continue;
+    
+    for (size_t i = 0; i < UBLOX_NEO_07M_HALF_BUFFOR_SIZE; i++){
+      uint8_t status = UBLOX_NEO_07M_read(&gps, &temp, buffer[i]);
+      if(status == UBLOX_NEO_07M_STATUS_OK)
+        data = temp;  // TODO: do something HERE with data
+    }
+    free(buffer);    
+  }
+}
+
+*/
 
 
 #endif

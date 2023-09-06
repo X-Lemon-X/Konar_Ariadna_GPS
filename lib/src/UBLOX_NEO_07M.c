@@ -9,7 +9,7 @@ uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data)
   data->latitude = 0;
   data->longitude = 0;
   data->altitude = 0;
-  data->speed = 0;
+  data->velocity = 0;
   data->hour = 0;
   data->minute = 0;
   data->second = 0;
@@ -21,7 +21,7 @@ uint8_t UBLOX_NEO_07M_Init(UBLOX_NEO_07M *data)
 
 uint8_t UBLOX_NEO_07M_GPS_Init(UBLOX_NEO_07M_GPS *gps, UBLOX_NEO_07M_Interpreter interpreter)
 {
-  if(gps == NULL) return UBLOX_NEO_07M_STATUS_ERROR;
+  if(gps == NULL || interpreter == NULL) return UBLOX_NEO_07M_STATUS_ERROR;
 
   memset(gps->small_buffor, 0, UBLOX_NEO_07M_SMALL_BUFFOR_SIZE);
   gps->s_index = 0;
@@ -60,7 +60,7 @@ uint8_t UBLOX_NEO_07M_Interpreter_GPRMC(UBLOX_NEO_07M *data, char *token, size_t
     break;
   case 5: data->longitude = atof(token);
     break;
-  case 7: data->speed = atof(token) * UBLOX_NEO_07M_CONST_KNOTS_TO_METERS_PER_SECOND;
+  case 7: data->velocity = atof(token) * UBLOX_NEO_07M_CONST_KNOTS_TO_METERS_PER_SECOND;
     break;
   case 9: 
     data->date = charToint(token[0])*10 + charToint(token[1]);

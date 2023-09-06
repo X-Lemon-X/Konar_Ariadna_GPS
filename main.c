@@ -42,7 +42,7 @@ $GPVTG,,T,,M,0.021,N,0.040,K,D*21
       printf("latitude: %f\n", data.latitude);
       printf("longitude: %f\n", data.longitude);
       printf("altitude: %f\n", data.altitude);
-      printf("speed: %f\n", data.speed);
+      printf("velocity: %f\n", data.velocity);
       printf("date: %d\n", data.date);
       printf("month: %d\n", data.month);
       printf("year: %d\n", data.year);
