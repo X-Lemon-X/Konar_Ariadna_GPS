@@ -92,22 +92,26 @@ uint8_t UBLOX_NEO_07M_read(UBLOX_NEO_07M_GPS *gps,UBLOX_NEO_07M *data, uint8_t b
 /// @param token_index index of token
 uint8_t UBLOX_NEO_07M_Interpreter_GPRMC(UBLOX_NEO_07M *data, char *token, size_t size, int token_index);
 
-/*
-
-void UBLOX_NEO_07M_UART_HANDLER(size_t buff_begin,size_t buff_end)
+/// @brief Run this function on UART DMA HAL_UART_RxCpltCallback and HAL_UART_RxHalfCpltCallback
+/// @param buff_begin beginning of the buffor  [0 or half] 
+/// @param buff_end end of the buffor [half -1 or full -1]  tells which  half of the bufor it is
+/// @param uart_rxBuffer buffor of the DMA 
+/// @param uart_rxQueue queue where tu puch data from DMA buffor
+void UBLOX_NEO_07M_UART_HANDLER(size_t buff_begin,size_t buff_end, uint8_t uart_rxBuffer, QueueHandle_t *uart_rxQueue)
 {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
   void *halfBuffor = malloc(UBLOX_NEO_07M_HALF_BUFFOR_SIZE*sizeof(uint8_t));
   if (halfBuffor == NULL) return;
-  memcpy(halfBuffor, UART6_rxBuffer+buff_begin, buff_end-buff_begin);
 
-  BaseType_t stat =xQueueCRSendFromISR(UART6_rxQueue, (void *)&halfBuffor, xHigherPriorityTaskWoken);
+  memcpy(halfBuffor, uart_rxBuffer+buff_begin, buff_end-buff_begin);
+  // memcpy(halfBuffor, UART6_rxBuffer+buff_begin, buff_end-buff_begin);
+
+  BaseType_t stat =xQueueCRSendFromISR(*uart_rxQueue, (void *)&halfBuffor, xHigherPriorityTaskWoken);
   if(stat) free(halfBuffor);
   if( xHigherPriorityTaskWoken ) portYIELD_FROM_ISR( xHigherPriorityTaskWoken ); // Actual macro used here is port specific.
 }
 
-*/
 
 /*
 
