@@ -103,3 +103,45 @@ uint8_t UBLOX_NEO_07M_read(UBLOX_NEO_07M_GPS *gps,UBLOX_NEO_07M *data, uint8_t b
 
   return UBLOX_NEO_07M_STATUS_WAIT;
 }
+
+void UBLOX_NEO_07M_UART_HANDLER(size_t buff_begin,size_t buff_end, uint8_t uart_rxBuffer, QueueHandle_t *uart_rxQueue)
+{
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+  void *halfBuffor = malloc(UBLOX_NEO_07M_HALF_BUFFOR_SIZE*sizeof(uint8_t));
+  if (halfBuffor == NULL) return;
+
+  memcpy(halfBuffor, uart_rxBuffer+buff_begin, buff_end-buff_begin);
+  // memcpy(halfBuffor, UART6_rxBuffer+buff_begin, buff_end-buff_begin);
+
+  BaseType_t stat =xQueueCRSendFromISR(*uart_rxQueue, (void *)&halfBuffor, xHigherPriorityTaskWoken);
+  if(stat) free(halfBuffor);
+  if( xHigherPriorityTaskWoken ) portYIELD_FROM_ISR( xHigherPriorityTaskWoken ); // Actual macro used here is port specific.
+}
+
+void Task_Read_GPS_DMA_(void *param) {
+  (void)param;
+  QueueHandle_t *uart_rxQueue=NULL; // REPLACE with queue for data from UART HANDLER
+  UART_HandleTypeDef *huart=NULL; // REPLACE with UART handler
+
+  uint8_t *buffer= NULL;
+  UBLOX_NEO_07M data;
+  UBLOX_NEO_07M_GPS gps;
+  UBLOX_NEO_07M_Init(&data);
+  UBLOX_NEO_07M_GPS_Init(&gps, UBLOX_NEO_07M_Interpreter_GPRMC);
+  *uart_rxQueue = xQueueCreate(10, sizeof(uint8_t*));
+  HAL_UART_Receive_DMA(huart,*uart_rxQueue, UBLOX_NEO_07M_BUFFER_SIZE);
+
+  UBLOX_NEO_07M temp;
+  while (1){
+    BaseType_t stat = xQueueReceive(*uart_rxQueue, (void *)&buffer, 50);
+    if(stat != pdTRUE) continue;
+    
+    for (size_t i = 0; i < UBLOX_NEO_07M_HALF_BUFFOR_SIZE; i++){
+      uint8_t status = UBLOX_NEO_07M_read(&gps, &temp, buffer[i]);
+      if(status == UBLOX_NEO_07M_STATUS_OK)
+        data = temp;  // TODO: do something HERE with data
+    }
+    free(buffer);    
+  }
+}

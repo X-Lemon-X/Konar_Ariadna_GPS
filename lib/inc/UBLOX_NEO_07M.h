@@ -115,7 +115,7 @@ void UBLOX_NEO_07M_UART_HANDLER(size_t buff_begin,size_t buff_end, uint8_t uart_
 
 /*
 
-void ReadGPS_DMA(void *param) {
+void Task_Read_GPS_DMA_(void *param) {
   (void)param;
   uint8_t *buffer= NULL;
   UBLOX_NEO_07M data;
